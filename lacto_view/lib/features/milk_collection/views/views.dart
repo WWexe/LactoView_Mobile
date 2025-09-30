@@ -2,14 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/model.dart';
+import '../services/services.dart';
 import '../view_models/view_models.dart';
-
-class Producer {
-  final int id;
-  final String name;
-  final String propertyName;
-  Producer({required this.id, required this.name, required this.propertyName});
-}
 
 class MilkCollectionFormView extends StatefulWidget {
   const MilkCollectionFormView({super.key});
@@ -20,23 +14,21 @@ class MilkCollectionFormView extends StatefulWidget {
 
 class _MilkCollectionFormViewState extends State<MilkCollectionFormView> {
   final _formKey = GlobalKey<FormState>();
-
   final _searchController = TextEditingController();
   final _volumeController = TextEditingController();
   final _temperatureController = TextEditingController();
   final _phController = TextEditingController();
-  final _observationController = TextEditingController(); // NOME CORRIGIDO
+  final _observationController = TextEditingController();
   final _tubeNumberController = TextEditingController();
 
-  // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
   Producer? _selectedProducer;
-  String? _selectedHygiene; // VARIÁVEL FALTANDO ADICIONADA
-
-  bool _producerPresent = false;
+  String? _selectedHygiene;
+  bool _producerPresent = true;
   bool _sampleCollected = false;
 
   @override
   void dispose() {
+    // Limpando todos os controladores
     _searchController.dispose();
     _volumeController.dispose();
     _temperatureController.dispose();
@@ -46,14 +38,38 @@ class _MilkCollectionFormViewState extends State<MilkCollectionFormView> {
     super.dispose();
   }
 
+  void _onProducerSelected(Producer producer) {
+    setState(() {
+      _selectedProducer = producer;
+      // Limpa o campo de busca e os resultados para a UI ficar limpa
+      _searchController.clear();
+      context.read<MilkCollectionViewModel>().searchProducers('');
+    });
+  }
+
+  void _cancel() {
+    setState(() {
+      _selectedProducer = null;
+      _searchController.clear();
+      // Limpa todos os campos do formulário
+      _volumeController.clear();
+      _temperatureController.clear();
+      _phController.clear();
+      _observationController.clear();
+      _tubeNumberController.clear();
+      _selectedHygiene = null;
+      _producerPresent = true;
+      _sampleCollected = false;
+    });
+  }
+
   void _saveForm() {
     if (_formKey.currentState!.validate()) {
-      // CORREÇÃO CRÍTICA: Lógica de salvar ajustada ao novo modelo e fluxo
+      // Lógica de salvar corrigida para usar os dados do produtor selecionado
+      // e dos campos do formulário
       final newCollection = MilkCollection(
         id: DateTime.now().millisecondsSinceEpoch,
-        // Dados vêm do produtor selecionado
         producerId: _selectedProducer!.id,
-        // O nome agora está junto, vamos dividir para o modelo
         producerFirstName: _selectedProducer!.name.split(' ').first,
         producerLastName: _selectedProducer!.name
             .split(' ')
@@ -61,18 +77,17 @@ class _MilkCollectionFormViewState extends State<MilkCollectionFormView> {
             .join(' '),
         producerPropertyId: 404, // Simulado
         propertyName: _selectedProducer!.propertyName,
-        // Dados vêm dos controladores do formulário
         temperature: _temperatureController.text,
         volumeLt: double.tryParse(_volumeController.text) ?? 0.0,
         producerPresent: _producerPresent,
         ph: double.tryParse(_phController.text) ?? 0.0,
-        hygiene: _selectedHygiene ?? 'Neutro', // Usando o valor do Dropdown
+        hygiene: _selectedHygiene ?? 'Neutro',
         sample: _sampleCollected,
         tubeNumber: _sampleCollected ? _tubeNumberController.text : '',
         observation: _observationController.text,
         status: "PENDING_ANALYSIS",
-        collectorId: 55,
-        analysisId: 0,
+        collectorId: 55, // Simulado
+        analysisId: 0, // Simulado
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -82,224 +97,519 @@ class _MilkCollectionFormViewState extends State<MilkCollectionFormView> {
     }
   }
 
-  void _cancel() {
-    setState(() {
-      // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
-      _selectedProducer = null;
-      _volumeController.clear();
-      _temperatureController.clear();
-      _phController.clear();
-      _observationController.clear();
-      _tubeNumberController.clear();
-      _selectedHygiene = null;
-      _searchController.clear();
-    });
-  }
-
-  void _performSearch(String query) {
-    if (query.isNotEmpty) {
-      setState(() {
-        // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
-        _selectedProducer = Producer(
-          id: 101,
-          name: 'SeucuMiadora',
-          propertyName: 'Fazenda Santa Rosa',
-        );
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nova Coleta de Leite')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Buscar Produtor',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () => _performSearch(_searchController.text),
+    // 1. Usamos o Consumer para que a tela se reconstrua com as mudanças do ViewModel
+    return Consumer<MilkCollectionViewModel>(
+      builder: (context, viewModel, child) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Nova Coleta de Leite')),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 2. O onChanged agora chama o ViewModel, ativando a busca em tempo real
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (query) => viewModel.searchProducers(query),
+                    decoration: InputDecoration(
+                      labelText: 'Buscar Produtor',
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                viewModel.searchProducers('');
+                              },
+                            )
+                          : const Icon(Icons.search),
+                    ),
                   ),
-                ),
-                onSubmitted: _performSearch,
-              ),
-              const SizedBox(height: 24),
+                  const SizedBox(height: 8),
 
-              // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
-              if (_selectedProducer != null)
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Produtor: ${_selectedProducer!.name}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  // 3. Bloco que mostra o "carregando" e a lista de resultados
+                  if (viewModel.isSearching)
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+
+                  if (!viewModel.isSearching &&
+                      viewModel.searchResults.isNotEmpty)
+                    SizedBox(
+                      height: 150, // Limita a altura da lista de resultados
+                      child: ListView.builder(
+                        itemCount: viewModel.searchResults.length,
+                        itemBuilder: (context, index) {
+                          final producer = viewModel.searchResults[index];
+                          return ListTile(
+                            title: Text(producer.name),
+                            subtitle: Text(producer.propertyName),
+                            onTap: () => _onProducerSelected(producer),
+                          );
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  if (_selectedProducer != null)
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
+                          Text(
+                            'Produtor: ${_selectedProducer!.name}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Propriedade: ${_selectedProducer!.propertyName}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Checkbox(
+                                value: _producerPresent,
+                                onChanged: (val) =>
+                                    setState(() => _producerPresent = val!),
+                              ),
+                              const Text('Presente?'),
+                            ],
+                          ),
+                          const Divider(height: 32, thickness: 1),
+                          const Center(
                             child: Text(
-                              'Propriedade: ${_selectedProducer!.propertyName}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                              'Dados do Leite',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.blueAccent,
                               ),
                             ),
                           ),
-                          Checkbox(
-                            value: _producerPresent,
-                            onChanged: (val) =>
-                                setState(() => _producerPresent = val!),
-                          ),
-                          const Text('Presente?'),
-                        ],
-                      ),
-                      const Divider(height: 32, thickness: 1),
-                      const Center(
-                        child: Text(
-                          'Dados do Leite',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.blueAccent,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _volumeController,
-                              decoration: const InputDecoration(
-                                labelText: 'Volume (L)',
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _volumeController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Volume (L)',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? 'Obrigatório'
+                                      : null,
+                                ),
                               ),
-                              keyboardType: TextInputType.number,
-                              validator: (v) => (v == null || v.isEmpty)
-                                  ? 'Obrigatório'
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _temperatureController,
-                              decoration: const InputDecoration(
-                                labelText: 'Temperatura (°C)',
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _temperatureController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Temperatura (°C)',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? 'Obrigatório'
+                                      : null,
+                                ),
                               ),
-                              keyboardType: TextInputType.number,
-                              validator: (v) => (v == null || v.isEmpty)
-                                  ? 'Obrigatório'
-                                  : null,
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _phController,
-                              decoration: const InputDecoration(
-                                labelText: 'PH (acidez)',
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _phController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'PH (acidez)',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? 'Obrigatório'
+                                      : null,
+                                ),
                               ),
-                              keyboardType: TextInputType.number,
-                              validator: (v) => (v == null || v.isEmpty)
-                                  ? 'Obrigatório'
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _selectedHygiene,
-                              decoration: const InputDecoration(
-                                labelText: 'Higiene',
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: _selectedHygiene,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Higiene',
+                                  ),
+                                  items: ['Ruim', 'Neutro', 'Bom']
+                                      .map(
+                                        (label) => DropdownMenuItem(
+                                          child: Text(label),
+                                          value: label,
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) =>
+                                      setState(() => _selectedHygiene = value),
+                                  validator: (v) =>
+                                      (v == null) ? 'Obrigatório' : null,
+                                ),
                               ),
-                              items: ['Ruim', 'Neutro', 'Bom']
-                                  .map(
-                                    (label) => DropdownMenuItem(
-                                      child: Text(label),
-                                      value: label,
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) =>
-                                  setState(() => _selectedHygiene = value),
-                              validator: (v) =>
-                                  (v == null) ? 'Obrigatório' : null,
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _sampleCollected,
-                            onChanged: (val) =>
-                                setState(() => _sampleCollected = val!),
-                          ),
-                          const Text('Coletou Amostra?'),
-                        ],
-                      ),
-                      TextFormField(
-                        enabled: _sampleCollected,
-                        controller: _tubeNumberController,
-                        decoration: InputDecoration(
-                          labelText: 'Número do Tubo',
-                          filled: !_sampleCollected,
-                          fillColor: Colors.grey[200],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _observationController,
-                        decoration: const InputDecoration(
-                          labelText: 'Observações',
-                        ),
-                        maxLines: 3,
-                      ), // NOME CORRIGIDO
-                      const SizedBox(height: 32),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _cancel,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red,
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _sampleCollected,
+                                onChanged: (val) =>
+                                    setState(() => _sampleCollected = val!),
                               ),
-                              child: const Text('Cancelar'),
+                              const Text('Coletou Amostra?'),
+                            ],
+                          ),
+                          TextFormField(
+                            enabled: _sampleCollected,
+                            controller: _tubeNumberController,
+                            decoration: InputDecoration(
+                              labelText: 'Número do Tubo',
+                              filled: !_sampleCollected,
+                              fillColor: Colors.grey[200],
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _saveForm,
-                              child: const Text('Salvar'),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _observationController,
+                            decoration: const InputDecoration(
+                              labelText: 'Observações',
                             ),
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _cancel,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Cancelar'),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _saveForm,
+                                  child: const Text('Salvar'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-            ],
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
+
+// class _MilkCollectionFormViewState extends State<MilkCollectionFormView> {
+//   final _formKey = GlobalKey<FormState>();
+
+//   final _searchController = TextEditingController();
+//   final _volumeController = TextEditingController();
+//   final _temperatureController = TextEditingController();
+//   final _phController = TextEditingController();
+//   final _observationController = TextEditingController(); // NOME CORRIGIDO
+//   final _tubeNumberController = TextEditingController();
+
+//   // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
+//   Producer? _selectedProducer;
+//   String? _selectedHygiene; // VARIÁVEL FALTANDO ADICIONADA
+
+//   bool _producerPresent = false;
+//   bool _sampleCollected = false;
+
+//   @override
+//   void dispose() {
+//     _searchController.dispose();
+//     _volumeController.dispose();
+//     _temperatureController.dispose();
+//     _phController.dispose();
+//     _observationController.dispose();
+//     _tubeNumberController.dispose();
+//     super.dispose();
+//   }
+
+//   void _saveForm() {
+//     if (_formKey.currentState!.validate()) {
+//       // CORREÇÃO CRÍTICA: Lógica de salvar ajustada ao novo modelo e fluxo
+//       final newCollection = MilkCollection(
+//         id: DateTime.now().millisecondsSinceEpoch,
+//         // Dados vêm do produtor selecionado
+//         producerId: _selectedProducer!.id,
+//         // O nome agora está junto, vamos dividir para o modelo
+//         producerFirstName: _selectedProducer!.name.split(' ').first,
+//         producerLastName: _selectedProducer!.name
+//             .split(' ')
+//             .sublist(1)
+//             .join(' '),
+//         producerPropertyId: 404, // Simulado
+//         propertyName: _selectedProducer!.propertyName,
+//         // Dados vêm dos controladores do formulário
+//         temperature: _temperatureController.text,
+//         volumeLt: double.tryParse(_volumeController.text) ?? 0.0,
+//         producerPresent: _producerPresent,
+//         ph: double.tryParse(_phController.text) ?? 0.0,
+//         hygiene: _selectedHygiene ?? 'Neutro', // Usando o valor do Dropdown
+//         sample: _sampleCollected,
+//         tubeNumber: _sampleCollected ? _tubeNumberController.text : '',
+//         observation: _observationController.text,
+//         status: "PENDING_ANALYSIS",
+//         collectorId: 55,
+//         analysisId: 0,
+//         createdAt: DateTime.now(),
+//         updatedAt: DateTime.now(),
+//       );
+
+//       context.read<MilkCollectionViewModel>().addCollection(newCollection);
+//       Navigator.pop(context);
+//     }
+//   }
+
+//   void _cancel() {
+//     setState(() {
+//       // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
+//       _selectedProducer = null;
+//       _volumeController.clear();
+//       _temperatureController.clear();
+//       _phController.clear();
+//       _observationController.clear();
+//       _tubeNumberController.clear();
+//       _selectedHygiene = null;
+//       _searchController.clear();
+//     });
+//   }
+
+//   void _performSearch(String query) {
+//     if (query.isNotEmpty) {
+//       setState(() {
+//         // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
+//         _selectedProducer = Producer(
+//           id: 101,
+//           name: 'SeucuMiadora',
+//           propertyName: 'Fazenda Santa Rosa',
+//         );
+//       });
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Nova Coleta de Leite')),
+//       body: SingleChildScrollView(
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.stretch,
+//             children: [
+//               TextField(
+//                 controller: _searchController,
+//                 decoration: InputDecoration(
+//                   labelText: 'Buscar Produtor',
+//                   suffixIcon: IconButton(
+//                     icon: const Icon(Icons.search),
+//                     onPressed: () => _performSearch(_searchController.text),
+//                   ),
+//                 ),
+//                 onSubmitted: _performSearch,
+//               ),
+//               const SizedBox(height: 24),
+
+//               // CORREÇÃO DE ERRO DE DIGITAÇÃO: _selectedProducer
+//               if (_selectedProducer != null)
+//                 Form(
+//                   key: _formKey,
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Text(
+//                         'Produtor: ${_selectedProducer!.name}',
+//                         style: const TextStyle(
+//                           fontSize: 16,
+//                           fontWeight: FontWeight.bold,
+//                         ),
+//                       ),
+//                       const SizedBox(height: 8),
+//                       Row(
+//                         children: [
+//                           Expanded(
+//                             child: Text(
+//                               'Propriedade: ${_selectedProducer!.propertyName}',
+//                               style: const TextStyle(
+//                                 fontSize: 16,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
+//                           ),
+//                           Checkbox(
+//                             value: _producerPresent,
+//                             onChanged: (val) =>
+//                                 setState(() => _producerPresent = val!),
+//                           ),
+//                           const Text('Presente?'),
+//                         ],
+//                       ),
+//                       const Divider(height: 32, thickness: 1),
+//                       const Center(
+//                         child: Text(
+//                           'Dados do Leite',
+//                           style: TextStyle(
+//                             fontSize: 18,
+//                             color: Colors.blueAccent,
+//                           ),
+//                         ),
+//                       ),
+//                       const SizedBox(height: 16),
+//                       Row(
+//                         children: [
+//                           Expanded(
+//                             child: TextFormField(
+//                               controller: _volumeController,
+//                               decoration: const InputDecoration(
+//                                 labelText: 'Volume (L)',
+//                               ),
+//                               keyboardType: TextInputType.number,
+//                               validator: (v) => (v == null || v.isEmpty)
+//                                   ? 'Obrigatório'
+//                                   : null,
+//                             ),
+//                           ),
+//                           const SizedBox(width: 16),
+//                           Expanded(
+//                             child: TextFormField(
+//                               controller: _temperatureController,
+//                               decoration: const InputDecoration(
+//                                 labelText: 'Temperatura (°C)',
+//                               ),
+//                               keyboardType: TextInputType.number,
+//                               validator: (v) => (v == null || v.isEmpty)
+//                                   ? 'Obrigatório'
+//                                   : null,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                       const SizedBox(height: 16),
+//                       Row(
+//                         children: [
+//                           Expanded(
+//                             child: TextFormField(
+//                               controller: _phController,
+//                               decoration: const InputDecoration(
+//                                 labelText: 'PH (acidez)',
+//                               ),
+//                               keyboardType: TextInputType.number,
+//                               validator: (v) => (v == null || v.isEmpty)
+//                                   ? 'Obrigatório'
+//                                   : null,
+//                             ),
+//                           ),
+//                           const SizedBox(width: 16),
+//                           Expanded(
+//                             child: DropdownButtonFormField<String>(
+//                               value: _selectedHygiene,
+//                               decoration: const InputDecoration(
+//                                 labelText: 'Higiene',
+//                               ),
+//                               items: ['Ruim', 'Neutro', 'Bom']
+//                                   .map(
+//                                     (label) => DropdownMenuItem(
+//                                       child: Text(label),
+//                                       value: label,
+//                                     ),
+//                                   )
+//                                   .toList(),
+//                               onChanged: (value) =>
+//                                   setState(() => _selectedHygiene = value),
+//                               validator: (v) =>
+//                                   (v == null) ? 'Obrigatório' : null,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                       const SizedBox(height: 16),
+//                       Row(
+//                         children: [
+//                           Checkbox(
+//                             value: _sampleCollected,
+//                             onChanged: (val) =>
+//                                 setState(() => _sampleCollected = val!),
+//                           ),
+//                           const Text('Coletou Amostra?'),
+//                         ],
+//                       ),
+//                       TextFormField(
+//                         enabled: _sampleCollected,
+//                         controller: _tubeNumberController,
+//                         decoration: InputDecoration(
+//                           labelText: 'Número do Tubo',
+//                           filled: !_sampleCollected,
+//                           fillColor: Colors.grey[200],
+//                         ),
+//                       ),
+//                       const SizedBox(height: 16),
+//                       TextFormField(
+//                         controller: _observationController,
+//                         decoration: const InputDecoration(
+//                           labelText: 'Observações',
+//                         ),
+//                         maxLines: 3,
+//                       ), // NOME CORRIGIDO
+//                       const SizedBox(height: 32),
+//                       Row(
+//                         children: [
+//                           Expanded(
+//                             child: OutlinedButton(
+//                               onPressed: _cancel,
+//                               style: OutlinedButton.styleFrom(
+//                                 foregroundColor: Colors.red,
+//                               ),
+//                               child: const Text('Cancelar'),
+//                             ),
+//                           ),
+//                           const SizedBox(width: 16),
+//                           Expanded(
+//                             child: ElevatedButton(
+//                               onPressed: _saveForm,
+//                               child: const Text('Salvar'),
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
