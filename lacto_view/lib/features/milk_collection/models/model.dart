@@ -5,11 +5,13 @@ class MilkCollection {
   final String producerLastName;
   final int producerPropertyId;
   final String propertyName;
+  final String rejectionReason;
+  final bool rejection;
   final double volumeLt;
-  final String temperature;
+  final double temperature;
   final bool producerPresent;
   final double ph;
-  final String hygiene;
+  final String numtanque;
   final bool sample;
   final String tubeNumber;
   final String observation;
@@ -27,10 +29,12 @@ class MilkCollection {
     required this.producerPropertyId,
     required this.propertyName,
     required this.temperature,
+    required this.rejectionReason,
+    required this.rejection,
     required this.volumeLt,
     required this.producerPresent,
     required this.ph,
-    required this.hygiene,
+    required this.numtanque,
     required this.sample,
     required this.tubeNumber,
     required this.observation,
@@ -49,11 +53,13 @@ class MilkCollection {
       producerLastName: json['producerLastName'],
       producerPropertyId: json['producer_property'],
       propertyName: json['propertyName'],
-      temperature: json['temperature'],
+      rejectionReason: json['rejectionReason'],
+      rejection: json['rejection'],
+      temperature: (json['temperature'] as num).toDouble(),
       volumeLt: (json['volume_lt'] as num).toDouble(),
       producerPresent: json['producer_present'],
       ph: json['ph'],
-      hygiene: json['hygiene'],
+      numtanque: json['numtanque'],
       sample: json['sample'],
       tubeNumber: json['tube_number'],
       observation: json['observation'],
@@ -73,6 +79,8 @@ class MilkCollection {
       'producer_First_Name': producerFirstName,
       'producer_Last_Name': producerLastName,
       'property_Name': propertyName,
+      'rejection_reason': rejectionReason,
+      'rejection': rejection,
       'temperature': temperature,
       'volume_lt': volumeLt,
       'producer_present': producerPresent,

@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
       create: (context) => MilkCollectionViewModel(),
       child: MaterialApp(
         title: 'LactoView Mobile',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
