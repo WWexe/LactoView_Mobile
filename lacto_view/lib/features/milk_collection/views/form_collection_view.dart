@@ -1,20 +1,41 @@
-import 'package:provider/provider.dart';
-import 'package:flutter/material.dart';
+// lib/views/form_collection_view.dart
+
 import 'package:flutter/material.dart';
 
+// A função buildInputDecoration continua aqui, no topo do arquivo...
+InputDecoration buildInputDecoration(
+  BuildContext context, {
+  required String labelText,
+  IconData? prefixIcon,
+}) {
+  // ...código da função inalterado
+  return InputDecoration(
+    labelText: labelText,
+    prefixIcon: prefixIcon != null
+        ? Icon(prefixIcon, color: Colors.grey[600])
+        : null,
+    filled: true,
+    fillColor: Colors.grey[100],
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12.0),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12.0),
+      borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+    ),
+  );
+}
+
 class CollectionDataForm extends StatelessWidget {
-  // Controladores para os campos de texto
+  // ... (Seus controladores e propriedades permanecem os mesmos)
   final TextEditingController volumeController;
   final TextEditingController temperatureController;
   final TextEditingController phController;
   final TextEditingController tubeNumberController;
   final TextEditingController observationController;
-
-  // Variáveis e callbacks para o Dropdown
   final String? selectedNumtanque;
   final ValueChanged<String?> onNumTanqueChanged;
-
-  // Callbacks para os botões de ação
   final VoidCallback onSave;
   final VoidCallback onCancel;
   final VoidCallback onFazerColeta;
@@ -37,31 +58,43 @@ class CollectionDataForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Estilo de botão centralizado para consistência
+    final buttonStyle = ButtonStyle(
+      padding: MaterialStateProperty.all<EdgeInsets>(
+        const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      ),
+      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Botões de Ação
+        // 2. Botões de Ação Superiores com hierarquia visual clara
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('Fazer Coleta'),
                 onPressed: onFazerColeta,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.green,
-                  side: const BorderSide(color: Colors.green),
-                ),
-                child: const Text('Fazer Coleta'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[600],
+                  foregroundColor: Colors.white,
+                ).merge(buttonStyle),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: OutlinedButton(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Rejeitar Coleta'),
                 onPressed: onRejeitarColeta,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                ),
-                child: const Text('Rejeitar Coleta'),
+                  foregroundColor: Colors.red[700],
+                  side: BorderSide(color: Colors.red[700]!),
+                ).merge(buttonStyle),
               ),
             ),
           ],
@@ -74,7 +107,11 @@ class CollectionDataForm extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: volumeController,
-                decoration: const InputDecoration(labelText: 'Volume (L)'),
+                decoration: buildInputDecoration(
+                  context,
+                  labelText: 'Volume (L)',
+                  prefixIcon: Icons.local_drink_outlined,
+                ),
                 keyboardType: TextInputType.number,
                 validator: (v) =>
                     (v == null || v.isEmpty) ? 'Obrigatório' : null,
@@ -84,8 +121,10 @@ class CollectionDataForm extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: temperatureController,
-                decoration: const InputDecoration(
+                decoration: buildInputDecoration(
+                  context,
                   labelText: 'Temperatura (°C)',
+                  prefixIcon: Icons.thermostat_outlined,
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -105,7 +144,11 @@ class CollectionDataForm extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: phController,
-                decoration: const InputDecoration(labelText: 'Alizarol (GL)'),
+                decoration: buildInputDecoration(
+                  context,
+                  labelText: 'Alizarol (GL)',
+                  prefixIcon: Icons.science_outlined,
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Obrigatório';
@@ -118,9 +161,16 @@ class CollectionDataForm extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             Expanded(
+              // 3. Dropdown com estilo corrigido
               child: DropdownButtonFormField<String>(
                 value: selectedNumtanque,
-                decoration: const InputDecoration(labelText: 'N° do Tanque'),
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                decoration: buildInputDecoration(
+                  context,
+                  labelText: 'N° do Tanque',
+                  prefixIcon: Icons.storage_outlined,
+                ),
                 items: ['1', '2', '3']
                     .map(
                       (label) =>
@@ -137,32 +187,49 @@ class CollectionDataForm extends StatelessWidget {
         TextFormField(
           controller: tubeNumberController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'N° da Amostra'),
+          decoration: buildInputDecoration(
+            context,
+            labelText: 'N° da Amostra',
+            prefixIcon: Icons.opacity_outlined,
+          ),
           validator: (v) => (v == null || v.isEmpty) ? 'Obrigatório' : null,
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: observationController,
-          decoration: const InputDecoration(
+          decoration: buildInputDecoration(
+            context,
             labelText: 'Observações (Opcional)',
+            prefixIcon: Icons.notes_outlined,
           ),
         ),
         const SizedBox(height: 32),
-        // Botões Finais
+
+        // 4. Botões Finais com estilo profissional e consistente
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.close_rounded),
+                label: const Text('Cancelar'),
                 onPressed: onCancel,
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.grey),
-                child: const Text('Cancelar'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey[700],
+                  side: BorderSide(color: Colors.grey[300]!),
+                ).merge(buttonStyle),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.save_alt_rounded),
+                label: const Text('Salvar'),
                 onPressed: onSave,
-                child: const Text('Salvar'),
+                style: ElevatedButton.styleFrom(
+                  // Usa a cor primária do seu tema para o botão principal
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ).merge(buttonStyle),
               ),
             ),
           ],

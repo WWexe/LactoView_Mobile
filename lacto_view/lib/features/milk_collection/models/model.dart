@@ -28,10 +28,10 @@ class MilkCollection {
     required this.producerLastName,
     required this.producerPropertyId,
     required this.propertyName,
-    required this.temperature,
     required this.rejectionReason,
     required this.rejection,
     required this.volumeLt,
+    required this.temperature,
     required this.producerPresent,
     required this.ph,
     required this.numtanque,
@@ -45,20 +45,21 @@ class MilkCollection {
     required this.updatedAt,
   });
 
+  // Factory para criar a instância a partir de um JSON
   factory MilkCollection.fromJson(Map<String, dynamic> json) {
     return MilkCollection(
       id: json['id'],
       producerId: json['producer_id'],
-      producerFirstName: json['producerFirstName'],
-      producerLastName: json['producerLastName'],
-      producerPropertyId: json['producer_property'],
-      propertyName: json['propertyName'],
-      rejectionReason: json['rejectionReason'],
+      producerFirstName: json['producer_first_name'],
+      producerLastName: json['producer_last_name'],
+      producerPropertyId: json['producer_property_id'],
+      propertyName: json['property_name'],
+      rejectionReason: json['rejection_reason'],
       rejection: json['rejection'],
       temperature: (json['temperature'] as num).toDouble(),
       volumeLt: (json['volume_lt'] as num).toDouble(),
       producerPresent: json['producer_present'],
-      ph: json['ph'],
+      ph: (json['ph'] as num).toDouble(), // CORRIGIDO: Type safety
       numtanque: json['numtanque'],
       sample: json['sample'],
       tubeNumber: json['tube_number'],
@@ -71,20 +72,22 @@ class MilkCollection {
     );
   }
 
+  // Método para converter a instância para um JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'producer_id': producerId,
       'producer_property_id': producerPropertyId,
-      'producer_First_Name': producerFirstName,
-      'producer_Last_Name': producerLastName,
-      'property_Name': propertyName,
+      'producer_first_name': producerFirstName, // CORRIGIDO: Padronizado
+      'producer_last_name': producerLastName, // CORRIGIDO: Padronizado
+      'property_name': propertyName, // CORRIGIDO: Padronizado
       'rejection_reason': rejectionReason,
       'rejection': rejection,
       'temperature': temperature,
       'volume_lt': volumeLt,
       'producer_present': producerPresent,
       'ph': ph,
+      'numtanque': numtanque, // CORRIGIDO: Adicionado campo
       'observation': observation,
       'sample': sample,
       'tube_number': tubeNumber,

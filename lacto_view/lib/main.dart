@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'features/milk_collection/view_models/view_models.dart';
 import 'features/milk_collection/views/views.dart';
+import 'features/milk_collection/views/main_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: const MilkCollectionFormView(),
+        home: const MainScreen(),
       ),
     );
   }
