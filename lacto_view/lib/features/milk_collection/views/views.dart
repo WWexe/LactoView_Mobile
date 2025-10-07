@@ -206,6 +206,73 @@ class _MilkCollectionFormViewState extends State<MilkCollectionFormView> {
         ),
         const SizedBox(height: 8),
 
+        //Botoes para alternar entre "Fazer Coleta" e "Rejeitar Coleta".
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[300], // Cor de fundo do container quando inativo
+            borderRadius: BorderRadius.circular(25.0),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25.0),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Fazer Coleta'),
+                      onPressed: () => setState(() => _isRejectionMode = false),
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: const Size.fromHeight(50),
+                        // Se o modo de rejeição NÃO estiver ativo, a cor é Verde. Senão, é Cinza.
+                        backgroundColor: !_isRejectionMode
+                            ? Colors.green
+                            : Colors.grey[300],
+
+                        // Se o modo de rejeição NÃO estiver ativo, o texto é Branco. Senão, é Cinza escuro.
+                        foregroundColor: !_isRejectionMode
+                            ? Colors.white
+                            : Colors.grey[700],
+
+                        // Adiciona sombra apenas quando o botão está selecionado.
+                        elevation: !_isRejectionMode ? 2.0 : 0.0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // BOTÃO REJEITAR COLETA
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.cancel_outlined),
+                      label: const Text('Rejeitar Coleta'),
+                      onPressed: () => setState(() => _isRejectionMode = true),
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: const Size.fromHeight(50),
+                        // Se o modo de rejeição ESTIVER ativo, a cor é Vermelha. Senão, é Cinza.
+                        backgroundColor: _isRejectionMode
+                            ? Colors.red
+                            : Colors.grey[300],
+
+                        // Se o modo de rejeição ESTIVER ativo, o texto é Branco. Senão, é Cinza escuro.
+                        foregroundColor: _isRejectionMode
+                            ? Colors.white
+                            : Colors.grey[700],
+
+                        // Adiciona sombra apenas quando o botão está selecionado.
+                        elevation: _isRejectionMode ? 2.0 : 0.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
         if (!_isRejectionMode) ...[
           Container(
             padding: const EdgeInsets.all(8.0),

@@ -71,34 +71,6 @@ class CollectionDataForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 2. Botões de Ação Superiores com hierarquia visual clara
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Fazer Coleta'),
-                onPressed: onFazerColeta,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[600],
-                  foregroundColor: Colors.white,
-                ).merge(buttonStyle),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Rejeitar Coleta'),
-                onPressed: onRejeitarColeta,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red[700],
-                  side: BorderSide(color: Colors.red[700]!),
-                ).merge(buttonStyle),
-              ),
-            ),
-          ],
-        ),
         const SizedBox(height: 24),
 
         // Campos do Leite
@@ -214,6 +186,7 @@ class CollectionDataForm extends StatelessWidget {
                 label: const Text('Cancelar'),
                 onPressed: onCancel,
                 style: OutlinedButton.styleFrom(
+                  fixedSize: const Size.fromHeight(40),
                   foregroundColor: Colors.grey[700],
                   side: BorderSide(color: Colors.grey[300]!),
                 ).merge(buttonStyle),
@@ -226,6 +199,7 @@ class CollectionDataForm extends StatelessWidget {
                 label: const Text('Salvar'),
                 onPressed: onSave,
                 style: ElevatedButton.styleFrom(
+                  fixedSize: const Size.fromHeight(40),
                   // Usa a cor primária do seu tema para o botão principal
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,

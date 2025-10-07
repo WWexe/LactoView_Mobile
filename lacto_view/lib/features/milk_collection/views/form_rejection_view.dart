@@ -8,12 +8,10 @@ class RejectionDataForm extends StatelessWidget {
   final TextEditingController temperatureController;
   final TextEditingController phController;
 
-  // Variáveis e callbacks para o Dropdown de motivo
   final String? selectedRejectionReason;
   final List<String> rejectionReasons;
   final ValueChanged<String?> onReasonChanged;
 
-  // Callbacks para os botões de ação
   final VoidCallback onSave;
   final VoidCallback onGoBack;
 
@@ -31,7 +29,6 @@ class RejectionDataForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Estilo compartilhado para os botões, para manter a consistência
     final buttonStyle = ButtonStyle(
       padding: MaterialStateProperty.all<EdgeInsets>(
         const EdgeInsets.symmetric(vertical: 12),
@@ -45,9 +42,7 @@ class RejectionDataForm extends StatelessWidget {
       children: [
         DropdownButtonFormField<String>(
           value: selectedRejectionReason,
-          // 1. Faz com que o conteúdo do dropdown preencha o espaço horizontal
           isExpanded: true,
-          // 2. Substitui o ícone padrão "bugado" por um de sua escolha
           icon: const Icon(Icons.keyboard_arrow_down_rounded),
           decoration: buildInputDecoration(
             context,
@@ -57,7 +52,6 @@ class RejectionDataForm extends StatelessWidget {
           items: rejectionReasons.map((String reason) {
             return DropdownMenuItem<String>(
               value: reason,
-              // Garante que textos longos não quebrem o layout
               child: Text(reason, overflow: TextOverflow.ellipsis, maxLines: 1),
             );
           }).toList(),
@@ -66,13 +60,11 @@ class RejectionDataForm extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // O conteúdo condicional permanece o mesmo
         if (selectedRejectionReason == rejectionReasons[0])
           ..._buildMilkDataFieldsForRejection(context),
 
         const SizedBox(height: 32),
 
-        // 3. Botões de ação estilizados com ícones e tamanho melhorado
         Row(
           children: [
             Expanded(
@@ -83,7 +75,7 @@ class RejectionDataForm extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.grey[700],
                   side: BorderSide(color: Colors.grey[300]!),
-                ).merge(buttonStyle), // Mescla com o estilo compartilhado
+                ).merge(buttonStyle),
               ),
             ),
             const SizedBox(width: 16),
@@ -95,7 +87,7 @@ class RejectionDataForm extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red[700],
                   foregroundColor: Colors.white,
-                ).merge(buttonStyle), // Mescla com o estilo compartilhado
+                ).merge(buttonStyle),
               ),
             ),
           ],
@@ -104,7 +96,6 @@ class RejectionDataForm extends StatelessWidget {
     );
   }
 
-  // Helper para construir os campos condicionais
   List<Widget> _buildMilkDataFieldsForRejection(BuildContext context) {
     return [
       const Text(
@@ -117,7 +108,6 @@ class RejectionDataForm extends StatelessWidget {
           Expanded(
             child: TextFormField(
               controller: volumeController,
-              // USANDO O ESTILO GLOBAL
               decoration: buildInputDecoration(
                 context,
                 labelText: 'Volume (L)',
@@ -131,7 +121,6 @@ class RejectionDataForm extends StatelessWidget {
           Expanded(
             child: TextFormField(
               controller: temperatureController,
-              // USANDO O ESTILO GLOBAL
               decoration: buildInputDecoration(
                 context,
                 labelText: 'Temperatura (°C)',
@@ -146,7 +135,6 @@ class RejectionDataForm extends StatelessWidget {
       const SizedBox(height: 16),
       TextFormField(
         controller: phController,
-        // USANDO O ESTILO GLOBAL
         decoration: buildInputDecoration(
           context,
           labelText: 'Alizarol (GL)',

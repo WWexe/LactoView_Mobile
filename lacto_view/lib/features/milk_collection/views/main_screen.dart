@@ -15,10 +15,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // Lista de telas que serão exibidas
+  //Telas a serem exibidas
   static const List<Widget> _screens = <Widget>[
     HomeScreen(),
-    MilkCollectionFormView(),
+    MilkCollectionFormView(), //Formulario de coleta/rejeiçao
     SearchScreen(),
     ProfileScreen(),
   ];
